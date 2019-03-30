@@ -10,16 +10,44 @@ import org.panta.misskey.R
 //単純なのでFragmentはない
 class CreateNoteActivity : AppCompatActivity() , CreateNoteContract.View{
 
+    companion object {
+        const val TARGET_NOTE_ID = "TARGET_NOTE_ID"
+        const val NOTE_TYPE = "NOTE_TYPE"
+        const val NOTE_TYPE_NORMAL = 0
+        const val NOTE_TYPE_RENOTE = 1
+        const val NOTE_TYPE_REPLY = 2
+    }
+
     override var mPresenter: CreateNoteContract.Presenter = CreateNotePresenter(this, "!Pap6YHn60rmhbwTV81YJKWkMIoX2GKy8")
+
+    private var mNoteType = 0
+    private var mTargetNoteId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_create_note)
 
+        val intent = intent
+        mNoteType = intent.getIntExtra(NOTE_TYPE, 0)
+        mTargetNoteId = intent.getStringExtra(TARGET_NOTE_ID)
+        when(mNoteType){
+            NOTE_TYPE_NORMAL ->{
+
+            }
+            NOTE_TYPE_RENOTE ->{
+
+            }
+            NOTE_TYPE_REPLY ->{
+
+            }
+        }
+
         val actionBar = supportActionBar
         actionBar?.setDisplayHomeAsUpEnabled(true)
 
     }
+
+
 
     override fun onError(msg: String) {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -40,7 +68,22 @@ class CreateNoteActivity : AppCompatActivity() , CreateNoteContract.View{
         when(item?.itemId){
             android.R.id.home -> finish()
             R.id.postNote ->{
-                mPresenter.post(editText.text.toString())
+                val text = editText.text.toString()
+                when(mNoteType){
+                    NOTE_TYPE_NORMAL ->{
+                        mPresenter.normalPost(text)
+                    }
+
+                }
+                mTargetNoteId?:return super.onOptionsItemSelected(item)
+                when(mNoteType){
+                    NOTE_TYPE_RENOTE ->{
+                        mPresenter.reNote(mTargetNoteId!!, text)
+                    }
+                    NOTE_TYPE_REPLY ->{
+                        mPresenter.reply(mTargetNoteId!!, text)
+                    }
+                }
             }
         }
         return super.onOptionsItemSelected(item)

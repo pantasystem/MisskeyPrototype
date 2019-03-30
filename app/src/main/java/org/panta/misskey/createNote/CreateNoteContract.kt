@@ -5,14 +5,13 @@ import org.panta.misskey.BaseView
 
 interface CreateNoteContract{
     interface View : BaseView<Presenter> {
-
         fun onPosted()
         fun onError(msg: String)
-
     }
 
     interface Presenter : BasePresenter{
-
-        fun post(text: String)
+        fun normalPost(text: String)
+        fun reply(id:String, text: String)
+        fun reNote(id: String, text: String?)
     }
 }

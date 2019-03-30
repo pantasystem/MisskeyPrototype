@@ -111,9 +111,6 @@ class TimelineView : Fragment(), TimelineContract.View, AbsListView.OnScrollList
         //先頭を表示していない場合
         if(nowPosition > 0){
             timelineAdapter.addFirst(content, false)
-            /*activity?.runOnUiThread{
-                timelineListView.setSelectionFromTop(mListViewFirstVisibleItemPosition + 1,0)
-            }*/
         }else{
             timelineAdapter.addFirst(content, true)
         }

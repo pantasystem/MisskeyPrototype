@@ -1,12 +1,13 @@
 package org.panta.misskey.api
 
 import android.util.Log
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 import org.json.JSONArray
 import org.json.JSONObject
 import org.panta.misskey.api.network.Connection
 import org.panta.misskey.json.TimelineJsonParser
-import org.panta.misskey.obj.Content
 import org.panta.misskey.obj.ContentData
 import java.io.BufferedReader
 import java.io.InputStreamReader
@@ -22,6 +23,32 @@ class NotesConnection(private val authKey: String, val mURL: URL){
 
     private val mConnection = Connection()
     private val timelineParser = TimelineJsonParser()
+
+    fun renote(noteId: String, text:String?){
+        val jsonObj = JSONObject()
+        jsonObj.put("i", authKey)
+        if(text != null && text.isNotBlank()){
+            jsonObj.put("text", text)
+        }
+        jsonObj.put("renoteId", noteId)
+
+        Log.d("json", jsonObj.toString())
+        GlobalScope.launch {
+            mConnection.post(URL("https://misskey.xyz/api/notes/create"), jsonObj.toString())
+        }
+
+    }
+
+    fun reply(noteId: String, text: String){
+        val jsonObj = JSONObject()
+        jsonObj.put("i", authKey)
+        jsonObj.put("text", text)
+        jsonObj.put("replyId", noteId)
+
+        GlobalScope.launch{
+            mConnection.post(URL("https://misskey.xyz/api/notes/create"), jsonObj.toString())
+        }
+    }
 
 
     suspend fun getNotesFromId(id: String, getType:SinceOrUntil, limit: Int,

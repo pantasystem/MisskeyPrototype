@@ -62,10 +62,10 @@ class TimelinePresenter(private val mView: TimelineContract.View, private val mS
             mRequestedAPICounter++
         }
         GlobalScope.launch{
-            val contentData = mNotesConnect.getNotesFromId(noteId, NotesConnection.SinceOrUntil.SINCE, 10)
+            val contentData = mNotesConnect.getNotesFromId(noteId, NotesConnection.SinceOrUntil.SINCE, 15)
             if(contentData == null){
                 mView.onError("タイムライン取得中にエラー発生")
-            }else{
+            }else if(contentData.isNotEmpty()){
                 //Log.d("ContentData", contentData.toString())
                 mView.addAllFirstToTimelineList(contentData)
             }
@@ -79,7 +79,7 @@ class TimelinePresenter(private val mView: TimelineContract.View, private val mS
             mRequestedAPICounter++
         }
         GlobalScope.launch{
-            val contentData = mNotesConnect.getNotesFromId(noteId, NotesConnection.SinceOrUntil.UNTIL, 10)
+            val contentData = mNotesConnect.getNotesFromId(noteId, NotesConnection.SinceOrUntil.UNTIL, 15)
             if(contentData == null){
                 mView.onError("タイムライン取得中にエラー発生")
             }else{
