@@ -4,37 +4,39 @@ import android.util.Log
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.json.JSONObject
 import org.panta.misskey.api.NotesConnection
+import org.panta.misskey.json.TimelineJsonParser
+import org.panta.misskey.streaming.IStreamingPortable
+import java.net.URL
 import java.util.*
 
-class TimelinePresenter(private val mView: TimelineContract.View) : TimelineContract.Presenter{
+class TimelinePresenter(private val mView: TimelineContract.View, private val mStreamingSocket: IStreamingPortable) : TimelineContract.Presenter, IStreamingPortable.MessageListener{
 
-    init{
-        apiCounterReset()
-    }
+    private val mNotesConnect = NotesConnection("!Pap6YHn60rmhbwTV81YJKWkMIoX2GKy8", URL("https://misskey.xyz/api/notes/timeline"))
 
-    private var mThisInstancesChannelId: String? = null
-    private val mNotesConnect = NotesConnection("!Pap6YHn60rmhbwTV81YJKWkMIoX2GKy8")
-    //timelineListはArrayAdapterが管理をする
+    private var mChannelId = 0
 
     //APIを叩いた数を計測する
     private var mRequestedAPICounter = 0
-    //一定時間ごとにAPIカウンターをリセットする
-    private fun apiCounterReset(){
-        GlobalScope.launch{
-            while(true){
-                mRequestedAPICounter = 0
+        set(value){
+            field = value
+            GlobalScope.launch{
+                //一定時間ごとにAPIカウンターをリセットする
                 delay(500)
+                field = 0
             }
         }
+
+    override fun connectChannel() {
+        Log.d("TimelinePresenter", "ConnectChannelメソッド実行")
+        val randomId = Random().nextInt(10000)
+        mChannelId = randomId
+        mStreamingSocket.createChannel("homeTimeline", randomId.toString(), this)
     }
 
-    override fun connectChannel(id: String) {
-
-    }
-
-    override fun disconnectChannel(id: String) {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    override fun disconnectChannel() {
+        mStreamingSocket.destroyChannel(mChannelId.toString())
     }
 
     override fun initTimeTimeline() {
@@ -64,7 +66,7 @@ class TimelinePresenter(private val mView: TimelineContract.View) : TimelineCont
             if(contentData == null){
                 mView.onError("タイムライン取得中にエラー発生")
             }else{
-                Log.d("ContentData", contentData.toString())
+                //Log.d("ContentData", contentData.toString())
                 mView.addAllFirstToTimelineList(contentData)
             }
         }
@@ -81,10 +83,19 @@ class TimelinePresenter(private val mView: TimelineContract.View) : TimelineCont
             if(contentData == null){
                 mView.onError("タイムライン取得中にエラー発生")
             }else{
-                Log.d("ContentData", contentData.toString())
+                //Log.d("ContentData", contentData.toString())
                 mView.addAllLastToTimelineList(contentData)
             }
         }
+    }
+
+    override fun onMessage(json: JSONObject) {
+        val timelineJsonParser = TimelineJsonParser()
+        val contentData = timelineJsonParser.timelineParseJson(json)
+
+        Log.d("onMessage", "Messageを受信した")
+        mView.addFirstToTimelineList(contentData)
+        mRequestedAPICounter++
     }
 
     override fun start() {

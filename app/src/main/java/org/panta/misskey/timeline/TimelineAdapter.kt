@@ -2,7 +2,6 @@ package org.panta.misskey.timeline
 
 import android.content.Context
 import android.support.v4.app.FragmentActivity
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,7 +10,6 @@ import android.widget.ImageView
 import android.widget.TextView
 import kotlinx.android.synthetic.main.timeline_item.view.*
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.panta.misskey.R
 import org.panta.misskey.obj.Content
@@ -61,53 +59,11 @@ class TimelineAdapter(private val context: Context, private val layoutId: Int,pr
         val content = timelineList[p0]
         when(content.contentType){
             ContentTypeEnum.NOTE ->{
-                val note = content.content as Content.Note
-                holder.text.text = note.text
-                holder.userId.text = note.user.userId
-                holder.userName.text = note.user.name
-                holder.userIcon.setImageResource(R.drawable.human_icon)
-                GlobalScope.launch{
-                    try{
-                        val bitmap = note.user.profileImage.await()
-
-                        activity.runOnUiThread {
-                            holder.userIcon.setImageBitmap(bitmap)
-                        }
-
-                    }catch(e : Exception){
-                        e.printStackTrace()
-                    }
-                }
+                onNote(holder, content)
 
             }
             ContentTypeEnum.RE_NOTE -> {
-                val reNote = content.content as Content.ReNote
-                holder.text.text = reNote.note.text
-                holder.userName.text = reNote.note.user.name
-                holder.userId.text = reNote.note.user.userId
-
-                holder.reNoteUserIcon.visibility = View.VISIBLE
-                holder.reNoteUserName.visibility = View.VISIBLE
-                holder.reNoteUserGaReNote.visibility = View.VISIBLE
-
-                holder.reNoteUserName.text = reNote.reNoteUser.name
-                Log.d("TimelineAdapter", "RenoteUserName ${reNote.reNoteUser.name}")
-
-                GlobalScope.launch{
-                    try{
-                        val noteUserBitmap = reNote.note.user.profileImage.await()
-                        val reNoteUserBitmap = reNote.reNoteUser.profileImage.await()
-                        activity.runOnUiThread{
-                            holder.userIcon.setImageBitmap(noteUserBitmap)
-                            holder.reNoteUserIcon.setImageBitmap(reNoteUserBitmap)
-
-                        }
-
-                    }catch(e: Exception){
-                        e.printStackTrace()
-                    }
-                }
-                //Log.d("ListView", "Adapter実行中")
+                onReNote(holder, content)
 
             }
         }
@@ -116,11 +72,69 @@ class TimelineAdapter(private val context: Context, private val layoutId: Int,pr
 
     }
 
-    fun addFirst(content: ContentData){
+    private fun onReNote(holder: ViewHolder, content: ContentData){
+        val reNote = content.content as Content.ReNote
+        holder.text.text = reNote.note.text
+        holder.userName.text = reNote.note.user.name
+        holder.userId.text = reNote.note.user.userId
+
+        holder.reNoteUserIcon.visibility = View.VISIBLE
+        holder.reNoteUserName.visibility = View.VISIBLE
+        holder.reNoteUserGaReNote.visibility = View.VISIBLE
+
+        holder.reNoteUserName.text = reNote.reNoteUser.name
+        //Log.d("TimelineAdapter", "RenoteUserName ${reNote.reNoteUser.name}")
+
+        GlobalScope.launch{
+            try{
+                val noteUserBitmap = reNote.note.user.profileImage.await()
+                val reNoteUserBitmap = reNote.reNoteUser.profileImage.await()
+                activity.runOnUiThread{
+                    holder.userIcon.setImageBitmap(noteUserBitmap)
+                    holder.reNoteUserIcon.setImageBitmap(reNoteUserBitmap)
+
+                }
+
+            }catch(e: Exception){
+                e.printStackTrace()
+            }
+        }
+        //Log.d("ListView", "Adapter実行中")
+    }
+
+    private fun onNote(holder: ViewHolder, content: ContentData){
+        val note = content.content as Content.Note
+        holder.reNoteUserName.visibility = View.GONE
+        holder.reNoteUserIcon.visibility = View.GONE
+        holder.reNoteUserGaReNote.visibility = View.GONE
+
+        holder.text.text = note.text
+        holder.userId.text = note.user.userId
+        holder.userName.text = note.user.name
+        holder.userIcon.setImageResource(R.drawable.human_icon)
+        GlobalScope.launch{
+            try{
+                val bitmap = note.user.profileImage.await()
+
+                activity.runOnUiThread {
+                    holder.userIcon.setImageBitmap(bitmap)
+                }
+
+            }catch(e : Exception){
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun addFirst(content: ContentData, isUpdate: Boolean){
         activity.runOnUiThread {
             if(timelineList is ArrayList){
                 timelineList.add(0, content)
-                notifyDataSetChanged()
+                if(isUpdate){
+                    activity.runOnUiThread {
+                        notifyDataSetChanged()
+                    }
+                }
             }
 
         }

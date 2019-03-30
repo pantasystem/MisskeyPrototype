@@ -41,7 +41,6 @@ class Connection : IConnection {
                 connect()
 
             }
-            Log.d("画像URL", url.toString())
             BufferedInputStream(con.inputStream)
 
         }catch (e: java.lang.Exception){

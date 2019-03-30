@@ -16,8 +16,9 @@ interface TimelineContract{
     }
 
     interface Presenter: BasePresenter{
-        fun connectChannel(id: String)
-        fun disconnectChannel(id: String)
+
+        fun connectChannel()
+        fun disconnectChannel()
 
         fun getNoteUntilId(noteId: String)
         fun getNoteSinceId(noteId: String)

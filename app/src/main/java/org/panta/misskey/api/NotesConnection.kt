@@ -14,7 +14,7 @@ import java.lang.StringBuilder
 import java.net.URL
 import java.util.*
 
-class NotesConnection(private val authKey: String){
+class NotesConnection(private val authKey: String, val mURL: URL){
 
     enum class SinceOrUntil{
         SINCE,UNTIL
@@ -86,7 +86,7 @@ class NotesConnection(private val authKey: String){
 
 
     private suspend fun getTextContent(json: String): String?{
-        val inputStream = mConnection.asyncPost(URL("https://misskey.xyz/api/notes/timeline"),json )
+        val inputStream = mConnection.asyncPost(mURL,json )
         inputStream?: return null
 
         val sb = StringBuilder()

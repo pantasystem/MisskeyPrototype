@@ -1,6 +1,5 @@
 package org.panta.misskey.streaming
 
-import android.util.Log
 import org.java_websocket.client.WebSocketClient
 import org.java_websocket.handshake.ServerHandshake
 import org.json.JSONObject
@@ -37,6 +36,7 @@ class StreamingPort private constructor(uri: URI) : IStreamingPortable{
     private val mChannelAndIdMap = HashMap<String, IStreamingPortable.MessageListener>()
 
     override fun createChannel(channel: String, id: String, listener: IStreamingPortable.MessageListener) {
+        mChannelAndIdMap[id] = listener
         val jsonString = "{\"type\": \"connect\", \"body\": {\"channel\": \"$channel\", \"id\": \"$id\"}}"
         if(mSocket.isOpen){
            mSocket.send(jsonString)
@@ -55,11 +55,15 @@ class StreamingPort private constructor(uri: URI) : IStreamingPortable{
     private inner class WebSocket(uri: URI): WebSocketClient(uri){
         override fun onOpen(handshakedata: ServerHandshake?) {
             while(mConnectToChannelQueue.isNotEmpty()){
-                this.send(mConnectToChannelQueue.removeFirst())
+                while(mConnectToChannelQueue.isNotEmpty()){
+                    this.send(mConnectToChannelQueue.removeFirst())
+
+                }
             }
         }
 
         override fun onMessage(message: String?) {
+
             val jsonObj = JSONObject(message)
             if(jsonObj.getString("type") == "channel"){
                 val body1 = jsonObj.getJSONObject("body")
@@ -73,11 +77,9 @@ class StreamingPort private constructor(uri: URI) : IStreamingPortable{
         }
 
         override fun onError(ex: Exception?) {
-            Log.e("WebSocket", "onError　WebSocketでエラー発生", ex)
         }
 
         override fun onClose(code: Int, reason: String?, remote: Boolean) {
-            Log.d("WebSocket", "WebSocketはCloseしました code:$code, reason:$reason, remote:$remote")
         }
     }
 
